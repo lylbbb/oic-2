@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>费用审批管理系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=Noto+Serif+SC:wght@600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+<style>
+:root {
+  --bg: #f4f6fb;
+  --white: #ffffff;
+  --sidebar: #141c2e;
+  --sidebar2: #1e2a40;
+  --accent: #2563eb;
+  --accent-light: #eff6ff;
+  --accent-mid: #bfdbfe;
+  --green: #16a34a; --green-bg: #f0fdf4; --green-b: #bbf7d0;
+  --amber: #b45309; --amber-bg: #fffbeb; --amber-b: #fde68a;
+  --red: #dc2626;   --red-bg: #fef2f2;   --red-b: #fecaca;
+  --sky: #0369a1;   --sky-bg: #f0f9ff;   --sky-b: #bae6fd;
+  --purple: #7c3aed; --purple-bg: #f5f3ff; --purple-b: #ddd6fe;
+  --text: #1e293b; --text2: #475569; --text3: #94a3b8;
+  --border: #e2e8f0; --border2: #f1f5f9;
+  --r: 12px; --r-sm: 8px;
+  --sh: 0 1px 3px #0000000d, 0 4px 16px #00000008;
+  --sh-md: 0 4px 12px #00000010, 0 12px 32px #00000008;
+  --sh-lg: 0 12px 40px #00000018;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:14px;line-height:1.5;}
+
+/* ───── SIDEBAR ───── */
+.sb{width:248px;background:var(--sidebar);flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;}
+.sb-logo{padding:22px 20px 18px;border-bottom:1px solid #ffffff0f;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.sb-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#2563eb,#7c3aed);border-radius:10px;display:grid;place-items:center;color:#fff;font-size:17px;font-weight:900;font-family:'Noto Serif SC',serif;flex-shrink:0;}
+.sb-logo-name{color:#fff;font-size:15px;font-weight:700;letter-spacing:.3px;}
+.sb-logo-sub{color:#ffffff40;font-size:10.5px;letter-spacing:.5px;}
+.sb-nav{flex:1;padding:14px 0;overflow-y:auto;}
+.sb-sec{padding:14px 18px 5px;font-size:10px;font-weight:700;color:#ffffff28;letter-spacing:1.5px;text-transform:uppercase;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:1px 8px;border-radius:8px;cursor:pointer;color:#ffffffa0;font-size:13px;font-weight:400;transition:all .15s;position:relative;user-select:none;}
+.sb-item:hover{background:#ffffff0e;color:#ffffffd0;}
+.sb-item.on{background:#2563eb28;color:#fff;font-weight:500;}
+.sb-item.on::before{content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);width:3px;height:20px;background:#2563eb;border-radius:0 2px 2px 0;}
+.sb-icon{width:20px;height:20px;display:grid;place-items:center;flex-shrink:0;}
+.sb-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.sb-badge{margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;line-height:1.6;}
+.sb-user{padding:14px 18px;border-top:1px solid #ffffff0f;display:flex;align-items:center;gap:10px;}
+.sb-av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0;}
+.sb-uname{color:#fff;font-size:13px;font-weight:500;}
+.sb-urole{color:#ffffff50;font-size:11px;}
+
+/* ───── MAIN ───── */
+.main{margin-left:248px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:60px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:14px;position:sticky;top:0;z-index:100;}
+.tb-title{font-size:16px;font-weight:700;color:var(--text);flex:1;}
+.tb-search{display:flex;align-items:center;gap:8px;background:var(--border2);border:1.5px solid var(--border);border-radius:9px;padding:7px 12px;width:210px;transition:border-color .15s;}
+.tb-search:focus-within{border-color:var(--accent);background:#fff;}
+.tb-search input{border:none;outline:none;background:transparent;font-size:13px;color:var(--text);width:100%;font-family:inherit;}
+.tb-search input::placeholder{color:var(--text3);}
+.tb-ic{width:36px;height:36px;border-radius:9px;border:1.5px solid var(--border);background:#fff;display:grid;place-items:center;cursor:pointer;font-size:15px;position:relative;transition:border-color .15s;}
+.tb-ic:hover{border-color:var(--accent);}
+.notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:#ef4444;border:2px solid #fff;}
+.tb-btn{display:flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}
+.tb-btn:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 4px 12px #2563eb40;}
+.tb-btn svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ───── PAGE ───── */
+.page{display:none;flex-direction:column;padding:24px;gap:20px;animation:fadein .2s ease;}
+.page.on{display:flex;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ───── CARDS ───── */
+.card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);}
+.card-head{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:14px;font-weight:700;color:var(--text);}
+.card-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.card-body{padding:20px;}
+
+/* ───── STAT GRID ───── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.stat-c{background:var(--white);border-radius:var(--r);border:1px solid var(--border);padding:20px;box-shadow:var(--sh);transition:box-shadow .2s,transform .2s;cursor:default;}
+.stat-c:hover{box-shadow:var(--sh-md);transform:translateY(-2px);}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.stat-lbl{font-size:11.5px;color:var(--text3);font-weight:600;letter-spacing:.3px;}
+.stat-ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:16px;}
+.stat-val{font-size:26px;font-weight:800;color:var(--text);letter-spacing:-1px;font-family:'JetBrains Mono',monospace;}
+.stat-val .u{font-size:13px;font-weight:500;color:var(--text3);margin-left:2px;font-family:'Noto Sans SC',sans-serif;}
+.stat-chg{font-size:12px;margin-top:6px;display:flex;align-items:center;gap:4px;}
+.up{color:var(--green);}  .dn{color:var(--red);}  .nt{color:var(--text3);}
+
+/* ───── CHARTS ───── */
+.chart-row{display:grid;grid-template-columns:1fr 320px;gap:16px;}
+#barChart,#pieChart{width:100%;height:248px;}
+
+/* ───── TABLE ───── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;background:var(--border2);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border2);transition:background .1s;cursor:pointer;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f8faff;}
+td{padding:13px 14px;font-size:13px;color:var(--text2);vertical-align:middle;}
+.td-main{font-weight:600;color:var(--text);font-size:13.5px;}
+.td-mono{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--text);font-size:13.5px;}
+.td-muted{font-size:12px;color:var(--text3);}
+
+/* ───── BADGES ───── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap;}
+.badge-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.b-pending {background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-b);}
+.b-approved{background:var(--green-bg);color:var(--green);border:1px solid var(--green-b);}
+.b-rejected{background:var(--red-bg);  color:var(--red);  border:1px solid var(--red-b);}
+.b-modified{background:var(--sky-bg);  color:var(--sky);  border:1px solid var(--sky-b);}
+.b-purple  {background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-b);}
+
+/* ───── MINI AVATAR ───── */
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0;}
+.av-row{display:flex;align-items:center;gap:8px;}
+
+/* ───── ACTION BTNS ───── */
+.abtn{padding:5px 11px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid transparent;font-family:inherit;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.abtn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.abtn-view{background:var(--accent-light);color:var(--accent);border-color:var(--accent-mid);}
+.abtn-view:hover{background:var(--accent);color:#fff;}
+.abtn-approve{background:var(--green-bg);color:var(--green);border-color:var(--green-b);}
+.abtn-approve:hover{background:var(--green);color:#fff;}
+.abtn-reject{background:var(--red-bg);color:var(--red);border-color:var(--red-b);}
+.abtn-reject:hover{background:var(--red);color:#fff;}
+.abtn-outline{background:#fff;color:var(--text2);border-color:var(--border);}
+.abtn-outline:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ───── FILTER ROW ───── */
+.frow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--border);}
+.fsel,.finput{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12.5px;color:var(--text);outline:none;background:#fff;font-family:inherit;transition:border-color .15s;cursor:pointer;}
+.fsel:focus,.finput:focus{border-color:var(--accent);}
+.finput{width:180px;}
+
+/* ───── PAGINATION ───── */
+.pagi{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);}
+.pagi-info{font-size:12px;color:var(--text3);}
+.pagi-btns{display:flex;gap:4px;}
+.pbtn{width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-size:12px;display:grid;place-items:center;font-family:inherit;transition:all .12s;color:var(--text2);}
+.pbtn:hover{border-color:var(--accent);color:var(--accent);}
+.pbtn.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* ───── DETAIL PAGE ───── */
+.detail-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;}
+.detail-hero{background:var(--white);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;}
+.detail-banner{padding:24px 28px;background:linear-gradient(135deg,#1e3a8a,#2563eb);position:relative;overflow:hidden;}
+.detail-banner::after{content:'¥';position:absolute;right:-10px;top:-20px;font-size:120px;font-weight:900;color:#ffffff0a;font-family:'JetBrains Mono',monospace;pointer-events:none;}
+.detail-banner-amount{font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:700;color:#fff;letter-spacing:-1px;}
+.detail-banner-title{color:#ffffff90;font-size:14px;margin-top:4px;}
+.detail-banner-status{margin-top:12px;}
+.detail-body{padding:24px 28px;}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.info-item{}
+.info-lbl{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px;}
+.info-val{font-size:14px;color:var(--text);font-weight:500;}
+.info-val.mono{font-family:'JetBrains Mono',monospace;font-weight:600;}
+
+.divider{height:1px;background:var(--border);margin:20px 0;}
+
+/* ───── TIMELINE ───── */
+.timeline{display:flex;flex-direction:column;gap:0;}
+.tl-item{display:flex;gap:14px;padding-bottom:20px;position:relative;}
+.tl-item:last-child{padding-bottom:0;}
+.tl-item:last-child .tl-line{display:none;}
+.tl-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:32px;}
+.tl-dot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:14px;flex-shrink:0;border:2px solid;}
+.tl-line{width:2px;background:var(--border);flex:1;margin:4px auto;}
+.tl-body{flex:1;padding-top:4px;}
+.tl-who{font-size:13px;font-weight:600;color:var(--text);}
+.tl-when{font-size:11.5px;color:var(--text3);margin-top:1px;}
+.tl-comment{background:var(--border2);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px;color:var(--text2);border-left:3px solid var(--border);}
+.tl-sig{margin-top:10px;}
+.tl-sig-lbl{font-size:11px;color:var(--text3);font-weight:600;letter-spacing:.5px;margin-bottom:6px;}
+.tl-sig-img{background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:8px;display:inline-block;}
+.tl-sig-canvas{display:block;}
+
+/* ───── SIDEBAR DETAIL ───── */
+.detail-side{display:flex;flex-direction:column;gap:16px;}
+.side-card{background:var(--white);border-radius:var(--r);border:1px solid var(--border);}
+.side-card-head{padding:14px 16px 10px;font-size:13px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);}
+.side-card-body{padding:14px 16px;}
+
+.attach-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2);}
+.attach-item:last-child{border-bottom:none;}
+.attach-ico{width:36px;height:36px;border-radius:8px;background:var(--accent-light);color:var(--accent);display:grid;place-items:center;font-size:16px;flex-shrink:0;}
+.attach-name{font-size:12.5px;font-weight:500;color:var(--text);flex:1;}
+.attach-size{font-size:11px;color:var(--text3);}
+.attach-dl{color:var(--accent);font-size:12px;cursor:pointer;}
+
+/* ───── AUDIT LOG ───── */
+.log-item{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--border2);}
+.log-item:last-child{border-bottom:none;}
+.log-ico{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-size:14px;flex-shrink:0;}
+.log-body{flex:1;}
+.log-action{font-size:13px;font-weight:600;color:var(--text);}
+.log-by{font-size:12px;color:var(--text3);}
+.log-diff{margin-top:8px;background:var(--border2);border-radius:8px;overflow:hidden;font-size:12px;}
+.log-diff-row{display:grid;grid-template-columns:80px 1fr 1fr;gap:0;}
+.log-diff-row>div{padding:6px 10px;border-bottom:1px solid var(--border);}
+.log-diff-row:last-child>div{border-bottom:none;}
+.log-diff-lbl{font-weight:700;color:var(--text3);font-size:11px;}
+.log-diff-old{background:#fef2f2;color:#991b1b;}
+.log-diff-new{background:#f0fdf4;color:#15803d;}
+
+/* ───── STAT PAGE ───── */
+.stat-page-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+#lineChart,#barChart2,#pieChart2{width:100%;height:260px;}
+
+/* ───── MODAL ───── */
+.overlay{position:fixed;inset:0;background:#00000060;backdrop-filter:blur(4px);z-index:300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.overlay.on{opacity:1;pointer-events:all;}
+.modal{background:#fff;border-radius:16px;width:520px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:var(--sh-lg);transform:translateY(16px) scale(.97);transition:transform .25s ease;}
+.overlay.on .modal{transform:none;}
+.modal-head{padding:22px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#fff;z-index:1;}
+.modal-title{font-size:16px;font-weight:800;color:var(--text);}
+.modal-x{width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-size:15px;display:grid;place-items:center;transition:all .12s;}
+.modal-x:hover{background:var(--red-bg);border-color:var(--red-b);color:var(--red);}
+.modal-body{padding:20px 24px;}
+.modal-foot{padding:14px 24px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+
+/* ───── FORM ───── */
+.fg{margin-bottom:16px;}
+.fg:last-child{margin-bottom:0;}
+.fl{display:block;font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:.2px;}
+.fl .req{color:#ef4444;margin-left:2px;}
+.fi,.fs,.fta{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;font-size:13px;color:var(--text);outline:none;font-family:inherit;transition:border-color .15s,box-shadow .15s;background:#fff;}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--accent);box-shadow:0 0 0 3px #2563eb15;}
+.fta{resize:vertical;min-height:80px;}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fhint{font-size:11.5px;color:var(--text3);margin-top:5px;}
+
+.upload-area{border:1.5px dashed var(--border);border-radius:9px;background:var(--border2);padding:20px;text-align:center;cursor:pointer;transition:all .15s;}
+.upload-area:hover{border-color:var(--accent);background:var(--accent-light);}
+.upload-area-ico{font-size:28px;margin-bottom:8px;}
+.upload-area-txt{font-size:13px;color:var(--text2);font-weight:500;}
+.upload-area-sub{font-size:11.5px;color:var(--text3);margin-top:3px;}
+
+/* ───── SIGNATURE ───── */
+.sig-wrap{border:1.5px solid var(--border);border-radius:9px;background:#fafbfc;position:relative;overflow:hidden;cursor:crosshair;}
+.sig-wrap canvas{display:block;}
+.sig-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;color:var(--text3);font-size:13px;gap:6px;}
+.sig-placeholder-ico{font-size:28px;opacity:.4;}
+
+/* ───── APPROVAL INFO BOX ───── */
+.apv-info{background:linear-gradient(135deg,#eff6ff,#f0fdf4);border:1.5px solid #bfdbfe;border-radius:10px;padding:16px;margin-bottom:18px;}
+.apv-info-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;}
+.apv-info-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.apv-info-row:last-child{margin-bottom:0;}
+.apv-info-key{font-size:12px;color:var(--text3);}
+.apv-info-val{font-size:13px;font-weight:600;color:var(--text);}
+.apv-info-val.big{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--accent);}
+
+/* ───── TOAST ───── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:var(--sh-lg);transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.4,.64,1);z-index:9999;display:flex;align-items:center;gap:10px;max-width:360px;}
+.toast.on{transform:translateY(0);opacity:1;}
+.toast.ok{background:var(--green);}
+.toast.er{background:var(--red);}
+.toast.wa{background:var(--amber);}
+
+/* ───── EMPTY ───── */
+.empty{padding:48px;text-align:center;color:var(--text3);}
+.empty-ico{font-size:40px;margin-bottom:12px;opacity:.4;}
+.empty-txt{font-size:14px;}
+
+/* ───── RESPONSIVE ───── */
+@media(max-width:960px){
+  .sb{transform:translateX(-100%);}
+  .sb.open{transform:none;}
+  .main{margin-left:0;}
+  .stat-row{grid-template-columns:1fr 1fr;}
+  .chart-row,.detail-grid,.stat-page-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ───── SIDEBAR ───── -->
+<aside class="sb" id="sb">
+  <div class="sb-logo">
+    <div class="sb-logo-icon">¥</div>
+    <div>
+      <div class="sb-logo-name">费用审批系统</div>
+      <div class="sb-logo-sub">EXPENSE · OPS</div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">主菜单</div>
+    <div class="sb-item on" data-page="dashboard">
+      <span class="sb-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      数据看板
+    </div>
+    <div class="sb-item" data-page="list">
+      <span class="sb-icon"><svg viewBox="0 0 24 24"><path d="M9 12h6M9 8h6M9 16h4M4 20V6a2 2 0 012-2h12a2 2 0 012 2v14l-4-2-4 2-4-2-4 2z"/></svg></span>
+      花销记录
+      <span class="sb-badge" id="listBadge">21</span>
+    </div>
+    <div class="sb-item" data-page="approval">
+      <span class="sb-icon"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
+      审批中心
+      <span class="sb-badge" id="apvBadge">3</span>
+    </div>
+    <div class="sb-sec">分析</div>
+    <div class="sb-item" data-page="stats">
+      <span class="sb-icon"><svg viewBox="0 0 24 24"><path d="M3 17l4-8 4 5 3-3 4 6H3z"/></svg></span>
+      统计报表
+    </div>
+    <div class="sb-item" data-page="audit">
+      <span class="sb-icon"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></span>
+      审计日志
+    </div>
+    <div class="sb-sec">管理</div>
+    <div class="sb-item" data-page="users">
+      <span class="sb-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75M9 7a4 4 0 100 8 4 4 0 000-8z"/></svg></span>
+      用户管理
+    </div>
+    <div class="sb-sec">导出</div>
+    <div class="sb-item" onclick="toast('正在生成 Excel 报表…','ok')">
+      <span class="sb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path d="M14 2v6h6M8 13h2m4 0h2M8 17h8"/></svg></span>
+      导出 Excel
+    </div>
+    <div class="sb-item" onclick="toast('正在生成 PDF 报表…','ok')">
+      <span class="sb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"/><path d="M14 2v6h6M10 12H8v8h2m0-4h2a2 2 0 000-4h-2"/></svg></span>
+      导出 PDF
+    </div>
+  </nav>
+  <div class="sb-user">
+    <div class="sb-av" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">张</div>
+    <div>
+      <div class="sb-uname">张总</div>
+      <div class="sb-urole">老板 · Boss</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ───── MAIN ───── -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-title" id="pageTitle">数据看板</div>
+    <div class="tb-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="searchInput" placeholder="搜索花销事项…" oninput="handleSearch(this.value)">
+    </div>
+    <div class="tb-ic" onclick="toast('您有 3 条待审批记录','wa')">
+      🔔<div class="notif-dot"></div>
+    </div>
+    <button class="tb-btn" onclick="openModal('addModal')">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      新增花销记录
+    </button>
+  </div>
+
+  <!-- ═══ DASHBOARD ═══ -->
+  <div class="page on" id="page-dashboard">
+    <div class="stat-row">
+      <div class="stat-c">
+        <div class="stat-top"><span class="stat-lbl">本月花销</span><div class="stat-ico" style="background:#eff6ff">💰</div></div>
+        <div class="stat-val">128,430<span class="u">元</span></div>
+        <div class="stat-chg up">↑ 12.4% 较上月</div>
+      </div>
+      <div class="stat-c">
+        <div class="stat-top"><span class="stat-lbl">待审批</span><div class="stat-ico" style="background:#fffbeb">⏳</div></div>
+        <div class="stat-val">3<span class="u">笔</span></div>
+        <div class="stat-chg nt">合计 ¥44,500</div>
+      </div>
+      <div class="stat-c">
+        <div class="stat-top"><span class="stat-lbl">已审批</span><div class="stat-ico" style="background:#f0fdf4">✅</div></div>
+        <div class="stat-val">18<span class="u">笔</span></div>
+        <div class="stat-chg up">↑ 3 笔 较上月</div>
+      </div>
+      <div class="stat-c">
+        <div class="stat-top"><span class="stat-lbl">本年累计</span><div class="stat-ico" style="background:#f0f9ff">📅</div></div>
+        <div class="stat-val">892,150<span class="u">元</span></div>
+        <div class="stat-chg dn">↓ 5.2% 较去年</div>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="card">
+        <div class="card-head">
+          <div><div class="card-title">月度花销趋势</div><div class="card-sub">2024年度 · 按审批状态</div></div>
+          <select class="fsel" style="font-size:12px" onchange="renderBarChart()"><option>2024年</option><option>2023年</option></select>
+        </div>
+        <div class="card-body" style="padding-top:8px"><div id="barChart"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">类别分布</div><div class="card-sub">本年度已审批</div></div></div>
+        <div class="card-body" style="padding-top:8px"><div id="pieChart"></div></div>
+      </div>
+    </div>
+
+    <!-- Recent -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">最近记录</div>
+        <button class="abtn abtn-view" onclick="navTo('list')">查看全部 →</button>
+      </div>
+      <div class="tbl-wrap" id="recentTable"></div>
+    </div>
+  </div>
+
+  <!-- ═══ EXPENSE LIST ═══ -->
+  <div class="page" id="page-list">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">花销记录</div>
+        <div style="display:flex;gap:8px">
+          <button class="abtn abtn-outline" onclick="toast('正在生成 Excel…','ok')">📥 Excel</button>
+          <button class="abtn abtn-outline" onclick="toast('正在生成 PDF…','ok')">📄 PDF</button>
+        </div>
+      </div>
+      <div class="frow">
+        <select class="fsel" id="filterStatus" onchange="renderList()">
+          <option value="">全部状态</option>
+          <option value="pending">待审批</option>
+          <option value="approved">已审批</option>
+          <option value="rejected">已拒绝</option>
+          <option value="modified">已修改</option>
+        </select>
+        <select class="fsel" id="filterMonth" onchange="renderList()">
+          <option value="">全部月份</option>
+          <option value="2024-03" selected>2024年 3月</option>
+          <option value="2024-02">2024年 2月</option>
+          <option value="2024-01">2024年 1月</option>
+        </select>
+        <select class="fsel" id="filterPerson" onchange="renderList()">
+          <option value="">全部人员</option>
+          <option value="王磊">王磊</option>
+          <option value="李静">李静</option>
+          <option value="陈博">陈博</option>
+          <option value="刘敏">刘敏</option>
+          <option value="赵伟">赵伟</option>
+        </select>
+        <input class="finput" placeholder="🔍 搜索事项…" oninput="handleSearch(this.value)">
+      </div>
+      <div class="tbl-wrap" id="listTable"></div>
+      <div class="pagi">
+        <div class="pagi-info">共 <span id="totalCount">0</span> 条记录，第 1 / 2 页</div>
+        <div class="pagi-btns">
+          <button class="pbtn">‹</button>
+          <button class="pbtn on">1</button>
+          <button class="pbtn">2</button>
+          <button class="pbtn">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ APPROVAL CENTER ═══ -->
+  <div class="page" id="page-approval">
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">审批中心</div><div class="card-sub">待我审批的花销申请</div></div>
+        <span class="badge b-pending"><span class="badge-dot"></span>3 条待处理</span>
+      </div>
+      <div id="approvalList" style="padding:0 20px 20px;display:flex;flex-direction:column;gap:14px;margin-top:16px;"></div>
+    </div>
+  </div>
+
+  <!-- ═══ DETAIL PAGE ═══ -->
+  <div class="page" id="page-detail">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+      <button class="abtn abtn-outline" onclick="navTo('list')">← 返回列表</button>
+      <span style="color:var(--text3);font-size:13px" id="detail-breadcrumb"></span>
+    </div>
+    <div class="detail-grid">
+      <div>
+        <!-- HERO -->
+        <div class="detail-hero" style="margin-bottom:16px">
+          <div class="detail-banner" id="detail-banner">
+            <div class="detail-banner-amount" id="d-amount"></div>
+            <div class="detail-banner-title" id="d-title"></div>
+            <div class="detail-banner-status" id="d-status-badge"></div>
+          </div>
+          <div class="detail-body">
+            <div class="info-grid" id="d-info-grid"></div>
+            <div class="divider"></div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">备注说明</div>
+            <div id="d-notes" style="font-size:13px;color:var(--text2);line-height:1.7;"></div>
+            <div id="d-actions" style="display:flex;gap:10px;margin-top:20px;"></div>
+          </div>
+        </div>
+
+        <!-- APPROVAL TIMELINE -->
+        <div class="card">
+          <div class="card-head"><div class="card-title">审批流程记录</div></div>
+          <div class="card-body">
+            <div class="timeline" id="d-timeline"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-side">
+        <!-- SUBMITTER -->
+        <div class="side-card">
+          <div class="side-card-head">提交人信息</div>
+          <div class="side-card-body" id="d-submitter"></div>
+        </div>
+        <!-- APPROVER -->
+        <div class="side-card">
+          <div class="side-card-head">审批人信息</div>
+          <div class="side-card-body" id="d-approver"></div>
+        </div>
+        <!-- ATTACHMENTS -->
+        <div class="side-card">
+          <div class="side-card-head">附件（<span id="attach-count">0</span>）</div>
+          <div class="side-card-body" id="d-attachments"></div>
+        </div>
+        <!-- AUDIT MINI -->
+        <div class="side-card">
+          <div class="side-card-head" style="display:flex;justify-content:space-between">
+            修改历史
+            <button class="abtn abtn-view" onclick="navTo('audit')" style="font-size:11px">查看全部</button>
+          </div>
+          <div class="side-card-body" id="d-mini-audit"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STATISTICS ═══ -->
+  <div class="page" id="page-stats">
+    <div class="stat-row">
+      <div class="stat-c"><div class="stat-top"><span class="stat-lbl">本年总花销</span><div class="stat-ico" style="background:#eff6ff">📊</div></div><div class="stat-val">892,150<span class="u">元</span></div><div class="stat-chg dn">↓ 5.2%</div></div>
+      <div class="stat-c"><div class="stat-top"><span class="stat-lbl">最高月份</span><div class="stat-ico" style="background:#fffbeb">🏆</div></div><div class="stat-val">3月<span class="u"></span></div><div class="stat-chg nt">¥128,430</div></div>
+      <div class="stat-c"><div class="stat-top"><span class="stat-lbl">平均每月</span><div class="stat-ico" style="background:#f0fdf4">📐</div></div><div class="stat-val">74,346<span class="u">元</span></div><div class="stat-chg nt">近12个月均值</div></div>
+      <div class="stat-c"><div class="stat-top"><span class="stat-lbl">审批通过率</span><div class="stat-ico" style="background:#f5f3ff">✅</div></div><div class="stat-val">87<span class="u">%</span></div><div class="stat-chg up">↑ 3% 较去年</div></div>
+    </div>
+    <div class="stat-page-grid">
+      <div class="card"><div class="card-head"><div class="card-title">月度花销趋势（近12月）</div></div><div class="card-body"><div id="lineChart"></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-title">类别占比分析</div></div><div class="card-body"><div id="pieChart2"></div></div></div>
+      <div class="card"><div class="card-head"><div class="card-title">人员花销排名</div></div><div class="card-body"><div id="barChart2"></div></div></div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">各类别月度对比</div></div>
+        <div class="card-body" style="padding:16px">
+          <table>
+            <thead><tr><th>类别</th><th>1月</th><th>2月</th><th>3月</th><th>合计</th></tr></thead>
+            <tbody id="catTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ AUDIT LOG ═══ -->
+  <div class="page" id="page-audit">
+    <div class="card">
+      <div class="card-head"><div><div class="card-title">完整审计日志</div><div class="card-sub">所有记录的修改历史与操作追踪</div></div></div>
+      <div class="frow">
+        <select class="fsel"><option>全部操作</option><option>新建</option><option>修改</option><option>审批</option><option>拒绝</option></select>
+        <select class="fsel"><option>全部人员</option><option>王磊</option><option>李静</option><option>张总</option></select>
+        <input class="finput" placeholder="🔍 搜索记录…">
+      </div>
+      <div style="padding:0 20px 20px" id="auditLog"></div>
+    </div>
+  </div>
+
+  <!-- ═══ USERS ═══ -->
+  <div class="page" id="page-users">
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">用户管理</div><div class="card-sub">管理系统成员与权限角色</div></div>
+        <button class="abtn abtn-view" onclick="toast('新增用户功能演示','ok')">＋ 新增用户</button>
+      </div>
+      <div class="tbl-wrap" id="usersTable"></div>
+    </div>
+  </div>
+</div><!-- end main -->
+
+<!-- ───── MODALS ───── -->
+
+<!-- ADD EXPENSE -->
+<div class="overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">新增花销记录</div>
+      <button class="modal-x" onclick="closeModal('addModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="frow2">
+        <div class="fg"><label class="fl">日期<span class="req">*</span></label><input type="date" class="fi" id="nDate"></div>
+        <div class="fg"><label class="fl">金额（元）<span class="req">*</span></label><input type="number" class="fi" placeholder="0.00" id="nAmount"></div>
+      </div>
+      <div class="fg"><label class="fl">花销事项<span class="req">*</span></label><input type="text" class="fi" placeholder="例：差旅费 - 北京出差" id="nTitle"></div>
+      <div class="frow2">
+        <div class="fg"><label class="fl">类别</label>
+          <select class="fs" id="nCat">
+            <option>差旅费</option><option>办公用品</option><option>餐饮招待</option>
+            <option>设备采购</option><option>培训费</option><option>广告营销</option><option>其他</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">指定审批人</label>
+          <select class="fs" id="nApprover">
+            <option>张总（老板）</option><option>李经理（管理员）</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">备注</label><textarea class="fta" placeholder="补充说明、报销原因…" id="nNotes"></textarea></div>
+      <div class="fg">
+        <label class="fl">附件（发票/收据）</label>
+        <div class="upload-area" onclick="toast('文件上传功能已就绪','ok')">
+          <div class="upload-area-ico">📎</div>
+          <div class="upload-area-txt">点击选择或拖拽上传</div>
+          <div class="upload-area-sub">支持 JPG · PNG · PDF，最大 10MB</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="abtn abtn-outline" onclick="closeModal('addModal')">取消</button>
+      <button class="tb-btn" onclick="submitExpense()">提交审批</button>
+    </div>
+  </div>
+</div>
+
+<!-- APPROVE MODAL -->
+<div class="overlay" id="approveModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">审批确认</div>
+      <button class="modal-x" onclick="closeModal('approveModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="apv-info" id="apv-info-box"></div>
+      <div class="fg">
+        <label class="fl">审批意见</label>
+        <textarea class="fta" id="apvComment" placeholder="填写审批意见…">费用合理，同意报销。</textarea>
+      </div>
+      <div class="fg">
+        <label class="fl">电子签名<span style="color:var(--text3);font-weight:400;margin-left:6px">（鼠标或触屏手写）</span></label>
+        <div class="sig-wrap" id="sigWrap" style="height:130px">
+          <canvas id="sigCanvas" style="width:100%;height:130px"></canvas>
+          <div class="sig-placeholder" id="sigPlaceholder">
+            <div class="sig-placeholder-ico">✍️</div>
+            <span>在此区域手写签名</span>
+          </div>
+        </div>
+        <div class="fhint" style="display:flex;justify-content:space-between">
+          <span>签名将附在审批记录中，具有法律效力</span>
+          <span style="color:var(--accent);cursor:pointer" onclick="clearSig()">清除重签</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="abtn abtn-outline" onclick="closeModal('approveModal')">取消</button>
+      <button class="abtn abtn-reject" onclick="doReject()">拒绝申请</button>
+      <button class="abtn abtn-approve" style="padding:8px 18px;font-size:13px" onclick="doApprove()">✅ 确认审批</button>
+    </div>
+  </div>
+</div>
+
+<!-- REJECT REASON MODAL -->
+<div class="overlay" id="rejectModal">
+  <div class="modal" style="width:420px">
+    <div class="modal-head">
+      <div class="modal-title">拒绝申请</div>
+      <button class="modal-x" onclick="closeModal('rejectModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="reject-info-box" style="background:var(--red-bg);border:1px solid var(--red-b);border-radius:9px;padding:12px 14px;margin-bottom:16px;font-size:13px;"></div>
+      <div class="fg">
+        <label class="fl">拒绝原因<span class="req">*</span></label>
+        <textarea class="fta" id="rejectReason" placeholder="请填写拒绝原因，方便申请人修改后重新提交…"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="abtn abtn-outline" onclick="closeModal('rejectModal')">取消</button>
+      <button class="abtn abtn-reject" onclick="confirmReject()">确认拒绝</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const PEOPLE = [
+  {id:1,name:'王磊',  dept:'市场部',  role:'employee',email:'wanglei@co.com',  color:'#2563eb'},
+  {id:2,name:'李静',  dept:'行政部',  role:'employee',email:'lijing@co.com',   color:'#16a34a'},
+  {id:3,name:'陈博',  dept:'技术部',  role:'employee',email:'chenbo@co.com',   color:'#7c3aed'},
+  {id:4,name:'刘敏',  dept:'销售部',  role:'employee',email:'liumin@co.com',   color:'#d97706'},
+  {id:5,name:'赵伟',  dept:'财务部',  role:'admin',   email:'zhaowei@co.com', color:'#dc2626'},
+  {id:6,name:'李经理',dept:'管理部',  role:'admin',   email:'limanager@co.com',color:'#0369a1'},
+  {id:7,name:'张总',  dept:'管理层',  role:'boss',    email:'boss@co.com',    color:'#92400e'},
+]
+
+const CATS = [
+  {name:'差旅费',   color:'#2563eb', emoji:'✈️'},
+  {name:'办公用品', color:'#16a34a', emoji:'📎'},
+  {name:'餐饮招待', color:'#d97706', emoji:'🍽️'},
+  {name:'设备采购', color:'#7c3aed', emoji:'💻'},
+  {name:'培训费',   color:'#db2777', emoji:'📚'},
+  {name:'广告营销', color:'#0284c7', emoji:'📢'},
+  {name:'其他',     color:'#6b7280', emoji:'📦'},
+]
+
+const SIG_SAMPLES = [
+  [[10,60],[25,40],[40,55],[55,35],[70,50],[85,30],[100,45],[115,25],[130,45]],
+  [[10,40],[20,30],[35,50],[50,25],[70,45],[90,20],[110,40],[130,55],[150,35]],
+  [[5,50],[20,35],[40,55],[60,30],[80,50],[100,25],[120,45],[140,30]],
+]
+
+const STATUS_MAP = {
+  pending:  {cls:'b-pending',  label:'待审批', emoji:'⏳'},
+  approved: {cls:'b-approved', label:'已审批', emoji:'✅'},
+  rejected: {cls:'b-rejected', label:'已拒绝', emoji:'❌'},
+  modified: {cls:'b-modified', label:'已修改', emoji:'✏️'},
+}
+
+let expenses = [
+  {id:'EXP001',date:'2024-03-08',title:'差旅费 - 上海商务出差',     cat:0,amount:8600, sub:0,apvId:6,status:'pending', notes:'3月6日至8日上海客户拜访，含机票、酒店及餐费。',  attachments:[{name:'机票票根.jpg',size:'1.2MB',type:'image'},{name:'酒店发票.pdf',size:'0.8MB',type:'pdf'}]},
+  {id:'EXP002',date:'2024-03-07',title:'采购激光打印机 × 2台',      cat:3,amount:3200, sub:1,apvId:6,status:'approved',notes:'采购办公用打印机，已询价三家供应商，选最优价。',attachments:[{name:'报价单.pdf',size:'0.5MB',type:'pdf'}]},
+  {id:'EXP003',date:'2024-03-06',title:'2024年一季度团队年会餐饮',  cat:2,amount:12800,sub:2,apvId:6,status:'approved',notes:'全体员工参与，共23人，含餐厅费用及活动策划费。',attachments:[{name:'餐饮发票.jpg',size:'1.5MB',type:'image'},{name:'签到表.pdf',size:'0.3MB',type:'pdf'},{name:'现场照片.jpg',size:'3.1MB',type:'image'}]},
+  {id:'EXP004',date:'2024-03-05',title:'腾讯广告平台3月投放费用',   cat:5,amount:25000,sub:3,apvId:6,status:'pending', notes:'3月份品牌推广广告投放，预算25000元，按季度结算。',attachments:[]},
+  {id:'EXP005',date:'2024-03-04',title:'员工技能培训 - Adobe PS课程',cat:4,amount:4500, sub:0,apvId:6,status:'approved',notes:'设计团队4人参加PS高级课程，提升设计产出效率。',attachments:[{name:'培训合同.pdf',size:'1.1MB',type:'pdf'}]},
+  {id:'EXP006',date:'2024-03-03',title:'办公耗材采购（墨盒、纸张）',cat:1,amount:890,  sub:4,apvId:6,status:'approved',notes:'月度常规办公耗材补充，采购清单见附件。',         attachments:[{name:'采购清单.pdf',size:'0.4MB',type:'pdf'},{name:'收据.jpg',size:'0.9MB',type:'image'}]},
+  {id:'EXP007',date:'2024-03-02',title:'差旅费 - 深圳客户拜访',     cat:0,amount:6200, sub:1,apvId:6,status:'rejected',notes:'拜访深圳客户，含高铁票及接待费用。',            attachments:[{name:'车票.jpg',size:'0.7MB',type:'image'}]},
+  {id:'EXP008',date:'2024-03-01',title:'阿里云服务器年费续费',       cat:6,amount:18000,sub:2,apvId:6,status:'pending', notes:'公司云服务器年度续费，含计算、存储及CDN资源包。',attachments:[{name:'阿里云账单.pdf',size:'0.6MB',type:'pdf'}]},
+  {id:'EXP009',date:'2024-02-28',title:'水电费及物业管理费',         cat:6,amount:4200, sub:4,apvId:6,status:'approved',notes:'2月份写字楼水电费及物业管理费缴纳。',          attachments:[{name:'物业发票.pdf',size:'0.5MB',type:'pdf'}]},
+  {id:'EXP010',date:'2024-02-26',title:'市场调研报告采购',           cat:4,amount:8800, sub:3,apvId:6,status:'approved',notes:'行业竞争格局调研报告，用于Q2战略规划参考。',    attachments:[{name:'采购合同.pdf',size:'1.2MB',type:'pdf'}]},
+]
+
+const APPROVALS = {
+  EXP002:{approver:PEOPLE[5],comment:'费用合理，采购必要，同意审批。',time:'2024-03-07 14:32',sigIdx:0},
+  EXP003:{approver:PEOPLE[6],comment:'年会支出合规，金额在预算内，批准。',time:'2024-03-06 18:05',sigIdx:1},
+  EXP005:{approver:PEOPLE[5],comment:'培训内容与岗位需求匹配，同意。',time:'2024-03-04 16:20',sigIdx:2},
+  EXP006:{approver:PEOPLE[5],comment:'常规耗材采购，无异议。',time:'2024-03-03 11:10',sigIdx:0},
+  EXP007:{approver:PEOPLE[5],comment:'此次出差未提前报备，差旅标准超出公司规定，请调整后重新提交。',time:'2024-03-02 17:45',action:'rejected'},
+  EXP009:{approver:PEOPLE[5],comment:'正常运营费用，审批通过。',time:'2024-02-28 10:30',sigIdx:1},
+  EXP010:{approver:PEOPLE[6],comment:'报告对公司战略有价值，同意采购。',time:'2024-02-27 15:50',sigIdx:2},
+}
+
+const AUDIT_LOGS = [
+  {id:1,expense:'EXP001',action:'created',  by:'王磊',  time:'2024-03-08 09:15',changes:null,                                         desc:'提交了差旅费申请'},
+  {id:2,expense:'EXP002',action:'created',  by:'李静',  time:'2024-03-07 10:00',changes:null,                                         desc:'提交了设备采购申请'},
+  {id:3,expense:'EXP002',action:'approved', by:'李经理',time:'2024-03-07 14:32',changes:null,                                         desc:'审批通过打印机采购'},
+  {id:4,expense:'EXP007',action:'updated',  by:'李静',  time:'2024-03-02 11:00',changes:[{f:'金额',o:'¥5,800',n:'¥6,200'}],           desc:'修改了差旅费金额'},
+  {id:5,expense:'EXP007',action:'rejected', by:'李经理',time:'2024-03-02 17:45',changes:null,                                         desc:'拒绝了差旅费申请'},
+  {id:6,expense:'EXP003',action:'created',  by:'陈博',  time:'2024-03-06 08:30',changes:null,                                         desc:'提交了年会餐饮申请'},
+  {id:7,expense:'EXP003',action:'updated',  by:'陈博',  time:'2024-03-06 09:00',changes:[{f:'备注',o:'全员参与',n:'全体员工参与，共23人'}],desc:'补充了备注说明'},
+  {id:8,expense:'EXP003',action:'approved', by:'张总',  time:'2024-03-06 18:05',changes:null,                                         desc:'老板签字审批年会费用'},
+]
+
+let currentExpId = null
+let currentSearchQ = ''
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+const PAGE_TITLES = {
+  dashboard:'数据看板', list:'花销记录', approval:'审批中心',
+  detail:'记录详情', stats:'统计报表', audit:'审计日志', users:'用户管理'
+}
+function navTo(page, id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'))
+  document.querySelectorAll('.sb-item[data-page]').forEach(i => i.classList.remove('on'))
+  document.getElementById('page-'+page).classList.add('on')
+  const sbItem = document.querySelector(`.sb-item[data-page="${page}"]`)
+  if (sbItem) sbItem.classList.add('on')
+  document.getElementById('pageTitle').textContent = PAGE_TITLES[page] || ''
+  if (page === 'detail' && id) showDetail(id)
+  if (page === 'stats') setTimeout(renderStatsCharts, 50)
+}
+document.querySelectorAll('.sb-item[data-page]').forEach(item => {
+  item.addEventListener('click', () => navTo(item.dataset.page))
+})
+
+// ═══════════════════════════════════════════════
+// TABLE RENDER UTILS
+// ═══════════════════════════════════════════════
+function av(person, size=28) {
+  return `<div class="av" style="width:${size}px;height:${size}px;font-size:${size*0.43}px;background:${person.color}">${person.name[0]}</div>`
+}
+function statusBadge(s) {
+  const m = STATUS_MAP[s]
+  return `<span class="badge ${m.cls}"><span class="badge-dot"></span>${m.label}</span>`
+}
+function catTag(catIdx) {
+  const c = CATS[catIdx]
+  return `<span class="badge b-purple" style="background:${c.color}18;color:${c.color};border-color:${c.color}30">${c.emoji} ${c.name}</span>`
+}
+
+function buildTable(rows) {
+  if (!rows.length) return `<div class="empty"><div class="empty-ico">📭</div><div class="empty-txt">暂无记录</div></div>`
+  return `<table>
+    <thead><tr>
+      <th>日期</th><th>花销事项</th><th>类别</th><th>金额</th>
+      <th>提交人</th><th>审批人</th><th>状态</th><th>操作</th>
+    </tr></thead>
+    <tbody>${rows.map(e => {
+      const sub = PEOPLE[e.sub]
+      const apv = PEOPLE.find(p=>p.id===e.apvId) || PEOPLE[6]
+      return `<tr onclick="navTo('detail','${e.id}')">
+        <td class="td-muted">${e.date}</td>
+        <td class="td-main">${e.title}</td>
+        <td>${catTag(e.cat)}</td>
+        <td class="td-mono">¥ ${e.amount.toLocaleString('zh-CN',{minimumFractionDigits:2})}</td>
+        <td><div class="av-row">${av(sub)} ${sub.name}</div></td>
+        <td><div class="av-row">${av(apv)} ${apv.name}</div></td>
+        <td>${statusBadge(e.status)}</td>
+        <td onclick="event.stopPropagation()" style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="abtn abtn-view" onclick="navTo('detail','${e.id}')">详情</button>
+          ${e.status==='pending'?`<button class="abtn abtn-approve" onclick="openApprove('${e.id}')">审批</button>`:''}
+        </td>
+      </tr>`
+    }).join('')}</tbody>
+  </table>`
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD RECENT TABLE
+// ═══════════════════════════════════════════════
+function renderRecent() {
+  document.getElementById('recentTable').innerHTML = buildTable(expenses.slice(0,6))
+}
+
+// ═══════════════════════════════════════════════
+// EXPENSE LIST
+// ═══════════════════════════════════════════════
+function renderList() {
+  const status = document.getElementById('filterStatus')?.value || ''
+  const person = document.getElementById('filterPerson')?.value || ''
+  let rows = expenses.filter(e => {
+    if (status && e.status !== status) return false
+    if (person && PEOPLE[e.sub].name !== person) return false
+    if (currentSearchQ && !e.title.toLowerCase().includes(currentSearchQ.toLowerCase())) return false
+    return true
+  })
+  document.getElementById('totalCount').textContent = rows.length
+  document.getElementById('listTable').innerHTML = buildTable(rows)
+}
+
+function handleSearch(q) {
+  currentSearchQ = q
+  renderList()
+}
+
+// ═══════════════════════════════════════════════
+// APPROVAL CENTER
+// ═══════════════════════════════════════════════
+function renderApprovalList() {
+  const pending = expenses.filter(e => e.status === 'pending')
+  const el = document.getElementById('approvalList')
+  document.getElementById('apvBadge').textContent = pending.length
+  if (!pending.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-ico">🎉</div><div class="empty-txt">暂无待审批申请</div></div>`
+    return
+  }
+  el.innerHTML = pending.map(e => {
+    const sub = PEOPLE[e.sub]
+    const c = CATS[e.cat]
+    return `<div style="background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:18px 20px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 16px #0000001a'" onmouseout="this.style.boxShadow=''" onclick="navTo('detail','${e.id}')">
+      <div style="width:46px;height:46px;border-radius:12px;background:${c.color}18;display:grid;place-items:center;font-size:22px;flex-shrink:0">${c.emoji}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">${e.title}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px">${e.date} · ${sub.name}（${sub.dept}）提交</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--accent)">¥${e.amount.toLocaleString()}</div>
+        <div style="margin-top:4px">${statusBadge(e.status)}</div>
+      </div>
+      <div style="display:flex;gap:8px" onclick="event.stopPropagation()">
+        <button class="abtn abtn-approve" onclick="openApprove('${e.id}')">
+          <svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"/></svg>审批
+        </button>
+        <button class="abtn abtn-reject" onclick="openReject('${e.id}')">拒绝</button>
+      </div>
+    </div>`
+  }).join('')
+}
+
+// ═══════════════════════════════════════════════
+// DETAIL PAGE
+// ═══════════════════════════════════════════════
+function drawSigOnCanvas(canvas, points, color) {
+  const ctx = canvas.getContext('2d')
+  const w = canvas.width, h = canvas.height
+  ctx.clearRect(0,0,w,h)
+  ctx.strokeStyle = color || '#1e293b'
+  ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+  ctx.beginPath()
+  // Scale points to canvas size
+  const maxX = Math.max(...points.map(p=>p[0]))
+  const maxY = Math.max(...points.map(p=>p[1]))
+  const scaleX = (w * .8) / maxX, scaleY = (h * .7) / maxY
+  const offX = w * .1, offY = h * .15
+  points.forEach((p,i) => {
+    const x = p[0]*scaleX + offX, y = p[1]*scaleY + offY
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y)
+  })
+  ctx.stroke()
+}
+
+function showDetail(id) {
+  const e = expenses.find(x=>x.id===id)
+  if (!e) return
+  currentExpId = id
+
+  document.getElementById('detail-breadcrumb').textContent = `EXP · ${e.id}`
+  document.getElementById('d-amount').textContent = `¥ ${e.amount.toLocaleString('zh-CN',{minimumFractionDigits:2})}`
+  document.getElementById('d-title').textContent = e.title
+  document.getElementById('d-status-badge').innerHTML = statusBadge(e.status)
+
+  const sub = PEOPLE[e.sub]
+  const apv = PEOPLE.find(p=>p.id===e.apvId) || PEOPLE[6]
+  const cat = CATS[e.cat]
+  const apvData = APPROVALS[id]
+
+  // Info grid
+  document.getElementById('d-info-grid').innerHTML = `
+    <div class="info-item"><div class="info-lbl">记录编号</div><div class="info-val mono">${e.id}</div></div>
+    <div class="info-item"><div class="info-lbl">花销日期</div><div class="info-val">${e.date}</div></div>
+    <div class="info-item"><div class="info-lbl">花销类别</div><div class="info-val">${cat.emoji} ${cat.name}</div></div>
+    <div class="info-item"><div class="info-lbl">花销金额</div><div class="info-val mono">¥ ${e.amount.toLocaleString('zh-CN',{minimumFractionDigits:2})}</div></div>
+    <div class="info-item"><div class="info-lbl">提交时间</div><div class="info-val">${e.date} 09:30</div></div>
+    <div class="info-item"><div class="info-lbl">当前状态</div><div class="info-val">${statusBadge(e.status)}</div></div>
+  `
+  document.getElementById('d-notes').textContent = e.notes || '（无备注）'
+
+  // Action buttons
+  let actions = `<button class="abtn abtn-outline" onclick="toast('正在生成 PDF…','ok')">📄 导出 PDF</button>`
+  if (e.status === 'pending') {
+    actions = `
+      <button class="abtn abtn-approve" style="padding:8px 16px;font-size:13px" onclick="openApprove('${e.id}')">✅ 审批通过</button>
+      <button class="abtn abtn-reject" style="padding:8px 16px;font-size:13px" onclick="openReject('${e.id}')">❌ 拒绝申请</button>
+      ${actions}`
+  }
+  document.getElementById('d-actions').innerHTML = actions
+
+  // Timeline
+  const tl = document.getElementById('d-timeline')
+  let tlHTML = `
+    <div class="tl-item">
+      <div class="tl-left">
+        <div class="tl-dot" style="background:#eff6ff;border-color:#bfdbfe;color:var(--accent)">📝</div>
+        <div class="tl-line"></div>
+      </div>
+      <div class="tl-body">
+        <div class="tl-who">${sub.name} <span style="font-weight:400;color:var(--text3)">提交申请</span></div>
+        <div class="tl-when">${e.date} 09:30 · ${sub.dept}</div>
+        <div class="tl-comment">申请报销「${e.title}」，金额 ¥${e.amount.toLocaleString()}</div>
+      </div>
+    </div>`
+
+  if (apvData) {
+    const isRejected = apvData.action === 'rejected'
+    const dotStyle = isRejected
+      ? 'background:var(--red-bg);border-color:var(--red-b);color:var(--red)'
+      : 'background:var(--green-bg);border-color:var(--green-b);color:var(--green)'
+    const canvasId = `sig-canvas-${id}`
+
+    tlHTML += `
+      <div class="tl-item">
+        <div class="tl-left">
+          <div class="tl-dot" style="${dotStyle}">${isRejected?'❌':'✅'}</div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-who">${apvData.approver.name} <span style="font-weight:400;color:var(--text3)">${isRejected?'拒绝了':'审批通过了'}此申请</span></div>
+          <div class="tl-when">${apvData.time} · ${apvData.approver.dept}</div>
+          <div class="tl-comment" style="border-left-color:${isRejected?'var(--red-b)':'var(--green-b)'}">💬 ${apvData.comment}</div>
+          ${!isRejected && apvData.sigIdx !== undefined ? `
+          <div class="tl-sig">
+            <div class="tl-sig-lbl">电子签名</div>
+            <div class="tl-sig-img">
+              <canvas class="tl-sig-canvas" id="${canvasId}" width="200" height="60"></canvas>
+            </div>
+          </div>` : ''}
+        </div>
+      </div>`
+  } else if (e.status === 'pending') {
+    tlHTML += `
+      <div class="tl-item">
+        <div class="tl-left">
+          <div class="tl-dot" style="background:var(--amber-bg);border-color:var(--amber-b);color:var(--amber)">⏳</div>
+        </div>
+        <div class="tl-body">
+          <div class="tl-who" style="color:var(--text3)">等待 ${apv.name} 审批中…</div>
+          <div class="tl-when">申请已提交，待审批人处理</div>
+        </div>
+      </div>`
+  }
+  tl.innerHTML = tlHTML
+
+  // Draw signature
+  if (apvData && apvData.sigIdx !== undefined) {
+    setTimeout(() => {
+      const c = document.getElementById(`sig-canvas-${id}`)
+      if (c) drawSigOnCanvas(c, SIG_SAMPLES[apvData.sigIdx], apvData.approver.color)
+    }, 50)
+  }
+
+  // Submitter info
+  document.getElementById('d-submitter').innerHTML = `
+    <div class="av-row" style="margin-bottom:12px">${av(sub,40)}<div><div style="font-size:14px;font-weight:700">${sub.name}</div><div style="font-size:12px;color:var(--text3)">${sub.dept} · ${sub.email}</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+      <div><div style="color:var(--text3);margin-bottom:3px">角色</div><span class="badge b-purple">员工</span></div>
+      <div><div style="color:var(--text3);margin-bottom:3px">本月提交</div><span style="font-weight:600">4 笔</span></div>
+    </div>`
+
+  // Approver info
+  document.getElementById('d-approver').innerHTML = `
+    <div class="av-row" style="margin-bottom:12px">${av(apv,40)}<div><div style="font-size:14px;font-weight:700">${apv.name}</div><div style="font-size:12px;color:var(--text3)">${apv.dept} · ${apv.email}</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+      <div><div style="color:var(--text3);margin-bottom:3px">角色</div><span class="badge ${apv.role==='boss'?'b-approved':'b-modified'}">${apv.role==='boss'?'老板':'管理员'}</span></div>
+      <div><div style="color:var(--text3);margin-bottom:3px">本月审批</div><span style="font-weight:600">12 笔</span></div>
+    </div>
+    ${apvData ? `<div style="margin-top:10px;font-size:12px;color:var(--text3)">审批时间：${apvData.time}</div>` : `<div style="margin-top:10px"><span class="badge b-pending">等待审批</span></div>`}`
+
+  // Attachments
+  document.getElementById('attach-count').textContent = e.attachments.length
+  document.getElementById('d-attachments').innerHTML = e.attachments.length
+    ? e.attachments.map(a => `
+      <div class="attach-item">
+        <div class="attach-ico">${a.type==='pdf'?'📄':'🖼️'}</div>
+        <div><div class="attach-name">${a.name}</div><div class="attach-size">${a.size}</div></div>
+        <span class="attach-dl" onclick="toast('正在下载 ${a.name}…','ok')">↓ 下载</span>
+      </div>`).join('')
+    : '<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px">暂无附件</div>'
+
+  // Mini audit
+  const logs = AUDIT_LOGS.filter(l => l.expense === id)
+  const actionCfg = {created:{ico:'📝',cls:'b-purple'},approved:{ico:'✅',cls:'b-approved'},rejected:{ico:'❌',cls:'b-rejected'},updated:{ico:'✏️',cls:'b-modified'}}
+  document.getElementById('d-mini-audit').innerHTML = logs.length
+    ? logs.map(l => {
+        const a = actionCfg[l.action]||{ico:'📋',cls:'b-purple'}
+        return `<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2)">
+          <div style="width:26px;height:26px;border-radius:6px;background:var(--border2);display:grid;place-items:center;font-size:13px;flex-shrink:0">${a.ico}</div>
+          <div><div style="font-size:12.5px;font-weight:500;color:var(--text)">${l.desc}</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${l.by} · ${l.time}</div></div>
+        </div>`
+      }).join('')
+    : '<div style="font-size:13px;color:var(--text3);text-align:center;padding:12px">暂无日志</div>'
+}
+
+// ═══════════════════════════════════════════════
+// STATISTICS CHARTS
+// ═══════════════════════════════════════════════
+const months = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月']
+const monthData = [62000,58500,128430,72000,65000,88000,71000,83000,94000,78000,68000,55000]
+
+function renderStatsCharts() {
+  // Line
+  const lc = echarts.init(document.getElementById('lineChart'))
+  lc.setOption({tooltip:{trigger:'axis'},grid:{top:10,bottom:30,left:52,right:10},
+    xAxis:{type:'category',data:months,axisLabel:{fontSize:11}},
+    yAxis:{type:'value',axisLabel:{formatter:v=>v>=10000?v/10000+'w':v,fontSize:11}},
+    series:[{type:'line',data:monthData,smooth:true,symbol:'circle',symbolSize:6,
+      lineStyle:{color:'#2563eb',width:2.5},
+      itemStyle:{color:'#2563eb'},
+      areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#2563eb30'},{offset:1,color:'#2563eb05'}]}}}]
+  })
+
+  // Pie
+  const pc = echarts.init(document.getElementById('pieChart2'))
+  pc.setOption({tooltip:{trigger:'item',formatter:'{b}: ¥{c} ({d}%)'},
+    legend:{orient:'vertical',right:0,top:'center',textStyle:{fontSize:11},itemWidth:10,itemHeight:10},
+    series:[{type:'pie',radius:['42%','68%'],center:['38%','50%'],label:{show:false},
+      data:[{value:280000,name:'差旅费',itemStyle:{color:'#2563eb'}},{value:198000,name:'广告营销',itemStyle:{color:'#0284c7'}},
+        {value:145000,name:'设备采购',itemStyle:{color:'#7c3aed'}},{value:86000,name:'餐饮招待',itemStyle:{color:'#d97706'}},
+        {value:52000,name:'培训费',itemStyle:{color:'#db2777'}},{value:31000,name:'办公用品',itemStyle:{color:'#16a34a'}},
+        {value:100150,name:'其他',itemStyle:{color:'#94a3b8'}}]}]
+  })
+
+  // Bar people
+  const bc = echarts.init(document.getElementById('barChart2'))
+  bc.setOption({tooltip:{trigger:'axis'},grid:{top:10,bottom:30,left:52,right:10},
+    xAxis:{type:'category',data:['王磊','李静','陈博','刘敏','赵伟'],axisLabel:{fontSize:11}},
+    yAxis:{type:'value',axisLabel:{formatter:v=>v>=10000?v/10000+'w':v,fontSize:11}},
+    series:[{type:'bar',data:[182000,95000,134000,86000,41000],barMaxWidth:40,
+      itemStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#2563eb'},{offset:1,color:'#60a5fa'}]},borderRadius:[6,6,0,0]}}]
+  })
+
+  // Cat table
+  const cats = [['差旅费',42000,28000,56000],[' 餐饮招待',12000,8000,18800],[' 设备采购',18000,6000,24000],[' 培训费',9000,4500,8000],[' 广告营销',0,25000,25000]]
+  document.getElementById('catTable').innerHTML = cats.map(r=>`<tr>
+    <td style="font-weight:500">${r[0]}</td>
+    ${r.slice(1).map(v=>`<td class="td-mono">¥${v.toLocaleString()}</td>`).join('')}
+    <td class="td-mono" style="font-weight:700">¥${r.slice(1).reduce((a,b)=>a+b,0).toLocaleString()}</td>
+  </tr>`).join('')
+}
+
+function renderBarChart() {
+  const bc = echarts.getInstanceByDom(document.getElementById('barChart')) || echarts.init(document.getElementById('barChart'))
+  const approvedData=[42000,38500,55800,61200,48900,72300,65400,58700,80200,71000,62400,128430]
+  const pendingData=[8000,12000,9500,7200,15000,5400,11200,9800,6500,13200,8900,24600]
+  bc.setOption({
+    tooltip:{trigger:'axis',formatter:p=>`${p[0].name}<br>${p.map(s=>`<span style="color:${s.color}">●</span> ${s.seriesName}: ¥${s.value.toLocaleString()}`).join('<br>')}`},
+    legend:{data:['已审批','待审批'],bottom:0,textStyle:{fontSize:11}},
+    grid:{top:8,bottom:36,left:50,right:8},
+    xAxis:{type:'category',data:months,axisLabel:{fontSize:11}},
+    yAxis:{type:'value',axisLabel:{formatter:v=>v>=10000?v/10000+'w':v,fontSize:11}},
+    series:[
+      {name:'已审批',type:'bar',stack:'t',data:approvedData,itemStyle:{color:'#16a34a'},barMaxWidth:22},
+      {name:'待审批',type:'bar',stack:'t',data:pendingData,itemStyle:{color:'#fbbf24',borderRadius:[4,4,0,0]},barMaxWidth:22}
+    ]
+  })
+
+  const pc = echarts.getInstanceByDom(document.getElementById('pieChart')) || echarts.init(document.getElementById('pieChart'))
+  pc.setOption({tooltip:{trigger:'item',formatter:'{b}: ¥{c} ({d}%)'},
+    legend:{orient:'vertical',right:0,top:'center',textStyle:{fontSize:11},itemWidth:10,itemHeight:10},
+    series:[{type:'pie',radius:['42%','68%'],center:['38%','50%'],label:{show:false},
+      data:[{value:280000,name:'差旅费',itemStyle:{color:'#2563eb'}},{value:198000,name:'广告营销',itemStyle:{color:'#0284c7'}},
+        {value:145000,name:'设备采购',itemStyle:{color:'#7c3aed'}},{value:86000,name:'餐饮招待',itemStyle:{color:'#d97706'}},
+        {value:52000,name:'培训费',itemStyle:{color:'#db2777'}},{value:31000,name:'办公用品',itemStyle:{color:'#16a34a'}},
+        {value:100150,name:'其他',itemStyle:{color:'#94a3b8'}}]}]
+  })
+}
+
+// ═══════════════════════════════════════════════
+// AUDIT LOG
+// ═══════════════════════════════════════════════
+function renderAuditLog() {
+  const cfg = {
+    created: {ico:'📝',label:'新建申请',bg:'#eff6ff',color:'#2563eb'},
+    approved:{ico:'✅',label:'审批通过',bg:'#f0fdf4',color:'#16a34a'},
+    rejected:{ico:'❌',label:'拒绝申请',bg:'#fef2f2',color:'#dc2626'},
+    updated: {ico:'✏️',label:'修改记录',bg:'#fffbeb',color:'#d97706'},
+  }
+  const exp = Object.fromEntries(expenses.map(e=>[e.id,e]))
+  document.getElementById('auditLog').innerHTML = [...AUDIT_LOGS].reverse().map(l => {
+    const c = cfg[l.action]||{ico:'📋',label:'操作',bg:'#f8fafc',color:'#64748b'}
+    const e = exp[l.expense]
+    return `<div class="log-item">
+      <div class="log-ico" style="background:${c.bg};color:${c.color}">${c.ico}</div>
+      <div class="log-body">
+        <div class="log-action">${l.by} · ${c.label}</div>
+        <div class="log-by">${l.time} · 记录编号 ${l.expense} · ${e?e.title.slice(0,20):'已删除'}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px">${l.desc}</div>
+        ${l.changes?`<div class="log-diff">
+          <div class="log-diff-row"><div class="log-diff-lbl">字段</div><div style="padding:6px 10px;font-weight:700;color:var(--text3);font-size:11px;background:var(--border2)">修改前</div><div style="padding:6px 10px;font-weight:700;color:var(--text3);font-size:11px;background:var(--border2)">修改后</div></div>
+          ${l.changes.map(ch=>`<div class="log-diff-row"><div class="log-diff-lbl">${ch.f}</div><div class="log-diff-old">${ch.o}</div><div class="log-diff-new">${ch.n}</div></div>`).join('')}
+        </div>`:''}
+      </div>
+    </div>`
+  }).join('')
+}
+
+// ═══════════════════════════════════════════════
+// USERS TABLE
+// ═══════════════════════════════════════════════
+function renderUsers() {
+  const roleMap = {employee:'员工',admin:'管理员',boss:'老板'}
+  const roleClass = {employee:'b-modified',admin:'b-purple',boss:'b-approved'}
+  document.getElementById('usersTable').innerHTML = `<table>
+    <thead><tr><th>用户</th><th>部门</th><th>角色</th><th>邮箱</th><th>状态</th><th>操作</th></tr></thead>
+    <tbody>${PEOPLE.map(p=>`<tr>
+      <td><div class="av-row">${av(p)} ${p.name}</div></td>
+      <td>${p.dept}</td>
+      <td><span class="badge ${roleClass[p.role]}">${roleMap[p.role]}</span></td>
+      <td class="td-muted">${p.email}</td>
+      <td><span class="badge b-approved"><span class="badge-dot"></span>活跃</span></td>
+      <td><button class="abtn abtn-outline" onclick="toast('编辑用户功能演示','ok')">编辑</button></td>
+    </tr>`).join('')}</tbody>
+  </table>`
+}
+
+// ═══════════════════════════════════════════════
+// APPROVE / REJECT
+// ═══════════════════════════════════════════════
+let sigPad = {drawing:false, ctx:null, canvas:null, hasData:false}
+
+function openApprove(id) {
+  currentExpId = id
+  const e = expenses.find(x=>x.id===id)
+  if (!e) return
+  const sub = PEOPLE[e.sub]
+  document.getElementById('apv-info-box').innerHTML = `
+    <div class="apv-info-title">审批申请详情</div>
+    <div class="apv-info-row"><span class="apv-info-key">花销事项</span><span class="apv-info-val">${e.title}</span></div>
+    <div class="apv-info-row"><span class="apv-info-key">申请金额</span><span class="apv-info-val big">¥ ${e.amount.toLocaleString()}</span></div>
+    <div class="apv-info-row"><span class="apv-info-key">申请人</span><span class="apv-info-val">${av(sub,20)} ${sub.name}（${sub.dept}）</span></div>
+    <div class="apv-info-row"><span class="apv-info-key">申请日期</span><span class="apv-info-val">${e.date}</span></div>`
+  document.getElementById('apvComment').value = '费用合理，同意报销。'
+  openModal('approveModal')
+  setTimeout(initSigPad, 100)
+}
+
+function openReject(id) {
+  currentExpId = id
+  const e = expenses.find(x=>x.id===id)
+  if (!e) return
+  document.getElementById('reject-info-box').innerHTML = `<strong>${e.title}</strong><br><span style="color:var(--text3)">金额：¥${e.amount.toLocaleString()} · 提交人：${PEOPLE[e.sub].name}</span>`
+  document.getElementById('rejectReason').value = ''
+  openModal('rejectModal')
+}
+
+function doApprove() {
+  if (!currentExpId) return
+  const e = expenses.find(x=>x.id===currentExpId)
+  if (!e) return
+  e.status = 'approved'
+  APPROVALS[currentExpId] = {
+    approver: PEOPLE[6], // boss
+    comment: document.getElementById('apvComment').value,
+    time: new Date().toLocaleString('zh-CN').slice(0,-3),
+    sigIdx: 1
+  }
+  AUDIT_LOGS.push({id:AUDIT_LOGS.length+1,expense:currentExpId,action:'approved',by:'张总',time:new Date().toLocaleString('zh-CN').slice(0,-3),changes:null,desc:'审批通过'})
+  closeModal('approveModal')
+  renderRecent(); renderList(); renderApprovalList()
+  document.getElementById('apvBadge').textContent = expenses.filter(x=>x.status==='pending').length
+  toast(`✅ 已审批通过「${e.title}」`, 'ok')
+  if (document.getElementById('page-detail').classList.contains('on')) showDetail(currentExpId)
+}
+
+function doReject() {
+  closeModal('approveModal')
+  openReject(currentExpId)
+}
+
+function confirmReject() {
+  const reason = document.getElementById('rejectReason').value.trim()
+  if (!reason) { toast('请填写拒绝原因','er'); return }
+  const e = expenses.find(x=>x.id===currentExpId)
+  if (!e) return
+  e.status = 'rejected'
+  APPROVALS[currentExpId] = {approver:PEOPLE[6],comment:reason,time:new Date().toLocaleString('zh-CN').slice(0,-3),action:'rejected'}
+  AUDIT_LOGS.push({id:AUDIT_LOGS.length+1,expense:currentExpId,action:'rejected',by:'张总',time:new Date().toLocaleString('zh-CN').slice(0,-3),changes:null,desc:'拒绝申请：'+reason})
+  closeModal('rejectModal')
+  renderRecent(); renderList(); renderApprovalList()
+  document.getElementById('apvBadge').textContent = expenses.filter(x=>x.status==='pending').length
+  toast(`❌ 已拒绝「${e.title}」`, 'er')
+  if (document.getElementById('page-detail').classList.contains('on')) showDetail(currentExpId)
+}
+
+// ═══════════════════════════════════════════════
+// SIGNATURE PAD
+// ═══════════════════════════════════════════════
+function initSigPad() {
+  const canvas = document.getElementById('sigCanvas')
+  if (!canvas) return
+  const wrap = document.getElementById('sigWrap')
+  canvas.width = wrap.offsetWidth || 460
+  canvas.height = 130
+  const ctx = canvas.getContext('2d')
+  ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+  sigPad = {drawing:false, ctx, canvas, hasData:false}
+
+  const getPos = e => {
+    const r = canvas.getBoundingClientRect()
+    const t = e.touches?.[0]||e
+    return [t.clientX-r.left, t.clientY-r.top]
+  }
+  canvas.onmousedown = canvas.ontouchstart = e => {
+    sigPad.drawing = true; sigPad.hasData = true
+    document.getElementById('sigPlaceholder').style.opacity = '0'
+    const [x,y] = getPos(e); ctx.beginPath(); ctx.moveTo(x,y)
+    e.preventDefault()
+  }
+  canvas.onmousemove = canvas.ontouchmove = e => {
+    if (!sigPad.drawing) return
+    const [x,y] = getPos(e); ctx.lineTo(x,y); ctx.stroke()
+    e.preventDefault()
+  }
+  canvas.onmouseup = canvas.onmouseleave = canvas.ontouchend = () => sigPad.drawing = false
+}
+
+function clearSig() {
+  if (sigPad.ctx) { sigPad.ctx.clearRect(0,0,sigPad.canvas.width,sigPad.canvas.height); sigPad.hasData=false }
+  const ph = document.getElementById('sigPlaceholder')
+  if (ph) ph.style.opacity='1'
+}
+
+// ═══════════════════════════════════════════════
+// ADD EXPENSE
+// ═══════════════════════════════════════════════
+function submitExpense() {
+  const title = document.getElementById('nTitle').value.trim()
+  const amount = parseFloat(document.getElementById('nAmount').value)
+  const date = document.getElementById('nDate').value
+  if (!title || !amount || !date) { toast('请填写所有必填项','er'); return }
+  const newId = 'EXP' + String(expenses.length+1).padStart(3,'0')
+  const catIdx = document.getElementById('nCat').selectedIndex
+  const notes = document.getElementById('nNotes').value
+  expenses.unshift({id:newId,date,title,cat:catIdx,amount,sub:0,apvId:6,status:'pending',notes:notes||'（无备注）',attachments:[]})
+  AUDIT_LOGS.push({id:AUDIT_LOGS.length+1,expense:newId,action:'created',by:'王磊',time:new Date().toLocaleString('zh-CN').slice(0,-3),changes:null,desc:'提交了新的花销申请'})
+  document.getElementById('listBadge').textContent = expenses.length
+  document.getElementById('apvBadge').textContent = expenses.filter(x=>x.status==='pending').length
+  closeModal('addModal')
+  renderRecent(); renderList(); renderApprovalList()
+  toast(`✅ 记录「${title}」已提交，等待审批`, 'ok')
+}
+
+// ═══════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════
+function openModal(id) {
+  document.getElementById(id).classList.add('on')
+  if (id==='addModal') document.getElementById('nDate').value = new Date().toISOString().slice(0,10)
+}
+function closeModal(id) { document.getElementById(id).classList.remove('on') }
+document.querySelectorAll('.overlay').forEach(el => el.addEventListener('click', e => { if(e.target===el) closeModal(el.id) }))
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+let _toastT
+function toast(msg, type) {
+  clearTimeout(_toastT)
+  const el = document.getElementById('toast')
+  el.textContent = msg; el.className = `toast on ${type}`
+  _toastT = setTimeout(() => el.classList.remove('on'), 3000)
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+renderRecent()
+renderList()
+renderApprovalList()
+renderAuditLog()
+renderUsers()
+setTimeout(renderBarChart, 80)
+
+window.addEventListener('resize', () => {
+  echarts.getInstanceByDom(document.getElementById('barChart'))?.resize()
+  echarts.getInstanceByDom(document.getElementById('pieChart'))?.resize()
+  echarts.getInstanceByDom(document.getElementById('lineChart'))?.resize()
+  echarts.getInstanceByDom(document.getElementById('pieChart2'))?.resize()
+  echarts.getInstanceByDom(document.getElementById('barChart2'))?.resize()
+})
+</script>
+</body>
+</html>
